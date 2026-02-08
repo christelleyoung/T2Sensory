@@ -42,7 +42,7 @@ export default function TeaSelector({ teas, selectedSlug, onSelect, onRandom, en
 
   return (
     <aside
-      className={`relative z-20 w-full max-w-md rounded-3xl border border-white/10 bg-black/40 p-6 shadow-soft backdrop-blur transition-all duration-700 ease-out sm:max-w-sm sm:p-8 ${
+      className={`relative z-20 w-full max-w-md rounded-3xl border border-white/10 bg-black/40 p-6 shadow-soft backdrop-blur transition-all duration-[1400ms] ease-out sm:max-w-sm sm:p-8 ${
         entered ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6 pointer-events-none"
       }`}
       onKeyDown={handleKeyDown}

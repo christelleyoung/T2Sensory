@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import Entrance from "../components/Entrance";
 import TeaSelector from "../components/TeaSelector";
 import VideoStage from "../components/VideoStage";
@@ -64,6 +65,13 @@ export default function HomePage() {
     handleSelect(pickRandom(teaPairings));
   };
 
+  const handleReset = () => {
+    setEntered(false);
+    setShareOpen(false);
+    setAmbientOn(false);
+    window.location.hash = "";
+  };
+
   const backgroundStyle = useMemo(() => {
     const [from, via, to] = selectedTea.palette;
     return {
@@ -74,6 +82,8 @@ export default function HomePage() {
   return (
     <main className="relative min-h-screen overflow-hidden bg-black text-white">
       <div className="absolute inset-0" style={backgroundStyle} />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.06),transparent_45%),radial-gradient(circle_at_bottom,_rgba(0,0,0,0.9),transparent_60%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-black/30" />
       <div className="absolute inset-0 opacity-40">
         <div className="pointer-events-none absolute inset-0">
           <span className="motion-safe:float absolute left-[10%] top-[20%] h-2 w-2 rounded-full bg-white/20 blur-md" />
@@ -82,12 +92,28 @@ export default function HomePage() {
           <span className="motion-safe:float absolute left-[80%] top-[70%] h-2 w-2 rounded-full bg-white/20 blur-md [animation-delay:4s]" />
         </div>
       </div>
-      <div className="grain absolute inset-0 opacity-50" />
+      <div className="grain absolute inset-0 opacity-20" />
+
+      <button
+        type="button"
+        onClick={handleReset}
+        className="absolute left-6 top-6 z-30 flex items-center gap-3 rounded-full border border-white/10 bg-black/40 px-4 py-2 transition duration-700 hover:border-white/30 hover:bg-black/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+        aria-label="Return to entrance"
+      >
+        <Image
+          src="https://s3.amazonaws.com/blab-impact-published-production/ojdylsEt8bvMh1Nzg4Lh1wMYQ7dznlMd"
+          alt="T2"
+          width={64}
+          height={32}
+          className="h-8 w-auto opacity-80 transition duration-700 hover:opacity-100"
+        />
+        <span className="text-xs uppercase tracking-[0.3em] text-white/60">Sensory Room</span>
+      </button>
 
       <Entrance entered={entered} onEnter={() => setEntered(true)} />
 
       <section
-        className={`relative z-20 mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 pb-24 pt-10 transition-all duration-700 ease-out sm:pb-28 lg:flex-row ${
+        className={`relative z-20 mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 pb-24 pt-16 transition-all duration-[1400ms] ease-out sm:pb-28 lg:flex-row ${
           entered ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
       >

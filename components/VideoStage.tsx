@@ -33,7 +33,7 @@ export default function VideoStage({ tea, entered, onShare }: VideoStageProps) {
   return (
     <section
       aria-label="Sensory video stage"
-      className={`relative flex min-h-[60vh] w-full items-center justify-center overflow-hidden rounded-[32px] border border-white/10 bg-white/5 shadow-soft transition-all duration-700 ease-out ${
+      className={`relative flex min-h-[60vh] w-full items-center justify-center overflow-hidden rounded-[32px] border border-white/10 bg-white/5 shadow-soft transition-all duration-[1400ms] ease-out ${
         entered ? "opacity-100" : "opacity-0"
       }`}
     >
