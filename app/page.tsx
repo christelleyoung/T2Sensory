@@ -8,7 +8,51 @@ import VideoStage from "../components/VideoStage";
 import ShareModal from "../components/ShareModal";
 import { teaPairings, type TeaPairing } from "../data/teaPairings";
 
+type Stage = "entrance" | "ritual" | "room";
+
 const microcopyOptions = ["Breathe in.", "Exhale.", "Sip slowly.", "Let the warmth linger."];
+const allowedStages: Stage[] = ["entrance", "ritual", "room"];
+const isStage = (value: string | null | undefined): value is Stage =>
+  !!value && allowedStages.includes(value as Stage);
+
+const parseHash = (): { stage: Stage; tea?: string } => {
+  if (typeof window === "undefined") {
+    return { stage: "entrance" };
+  }
+
+  const rawHash = window.location.hash.replace(/^#/, "");
+  if (!rawHash) {
+    return { stage: "entrance" };
+  }
+
+  if (rawHash.startsWith("tea=") && !rawHash.includes("&")) {
+    const tea = rawHash.replace("tea=", "");
+    return { stage: "entrance", tea: tea || undefined };
+  }
+
+  const params = new URLSearchParams(rawHash);
+  const rawStage = params.get("stage");
+  const rawTea = params.get("tea");
+  const stage: Stage = isStage(rawStage) ? rawStage : "entrance";
+  const tea = rawTea ?? (rawHash.startsWith("tea=") ? rawHash.replace("tea=", "") : undefined);
+
+  return { stage, tea: tea || undefined };
+};
+
+const updateHash = (stage: Stage, teaSlug?: string) => {
+  if (!teaSlug) {
+    window.location.hash = stage === "entrance" ? "" : `stage=${stage}`;
+    return;
+  }
+
+  if (stage === "entrance") {
+    window.location.hash = `tea=${teaSlug}`;
+    return;
+  }
+
+  const params = new URLSearchParams({ stage, tea: teaSlug });
+  window.location.hash = params.toString();
+};
 
 const pickRandom = <T,>(items: T[]) => items[Math.floor(Math.random() * items.length)];
 const silentAudio =
@@ -16,33 +60,41 @@ const silentAudio =
 
 export default function HomePage() {
   const [entered, setEntered] = useState(false);
+  const [stage, setStage] = useState<Stage>("entrance");
   const [selectedTea, setSelectedTea] = useState<TeaPairing>(teaPairings[0]);
   const [shareOpen, setShareOpen] = useState(false);
   const [ambientOn, setAmbientOn] = useState(false);
   const [microcopy, setMicrocopy] = useState(microcopyOptions[0]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-
-  useEffect(() => {
-    const existingHash = window.location.hash;
-    if (existingHash.startsWith("#tea=")) {
-      const slug = existingHash.replace("#tea=", "");
-      const match = teaPairings.find((tea) => tea.slug === slug);
-      if (match) setSelectedTea(match);
-    }
-  }, []);
+  const skipHashUpdateRef = useRef(false);
 
   useEffect(() => {
     const handler = () => {
-      const slug = window.location.hash.replace("#tea=", "");
-      const match = teaPairings.find((tea) => tea.slug === slug);
+      const { stage: parsedStage, tea } = parseHash();
+      setStage(parsedStage);
+      if (!tea) return;
+      const match = teaPairings.find((teaPairing) => teaPairing.slug === tea);
       if (match) setSelectedTea(match);
     };
+
+    handler();
     window.addEventListener("hashchange", handler);
     return () => window.removeEventListener("hashchange", handler);
   }, []);
 
   useEffect(() => {
-    window.location.hash = `tea=${selectedTea.slug}`;
+    setEntered(stage !== "entrance");
+  }, [stage]);
+
+  useEffect(() => {
+    if (skipHashUpdateRef.current) {
+      skipHashUpdateRef.current = false;
+      return;
+    }
+    updateHash(stage, selectedTea.slug);
+  }, [selectedTea, stage]);
+
+  useEffect(() => {
     setMicrocopy(pickRandom(microcopyOptions));
   }, [selectedTea]);
 
@@ -58,7 +110,9 @@ export default function HomePage() {
 
   const handleSelect = (tea: TeaPairing) => {
     setSelectedTea(tea);
-    if (!entered) setEntered(true);
+    if (stage === "entrance") {
+      setStage("ritual");
+    }
   };
 
   const handleRandom = () => {
@@ -66,7 +120,8 @@ export default function HomePage() {
   };
 
   const handleReset = () => {
-    setEntered(false);
+    skipHashUpdateRef.current = true;
+    setStage("entrance");
     setShareOpen(false);
     setAmbientOn(false);
     window.location.hash = "";
@@ -110,7 +165,7 @@ export default function HomePage() {
         <span className="text-xs uppercase tracking-[0.3em] text-white/60">Sensory Room</span>
       </button>
 
-      <Entrance entered={entered} onEnter={() => setEntered(true)} />
+      <Entrance entered={entered} onEnter={() => setStage("ritual")} />
 
       <section
         className={`relative z-20 mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 pb-24 pt-16 transition-all duration-[1400ms] ease-out sm:pb-28 lg:flex-row ${
