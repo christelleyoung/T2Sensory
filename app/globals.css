@@ -7,7 +7,7 @@
 }
 
 body {
-  @apply bg-[#050506] text-white antialiased;
+  @apply bg-[#050505] text-white antialiased;
   font-feature-settings: "liga" 1, "kern" 1;
 }
 
@@ -26,115 +26,29 @@ body {
   }
 }
 
-@keyframes grainShift {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0);
-  }
-  33% {
-    transform: translate3d(-1%, 0.6%, 0);
-  }
-  66% {
-    transform: translate3d(1.2%, -0.7%, 0);
-  }
-}
-
-@keyframes gentleDrift {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0);
-  }
-  50% {
-    transform: translate3d(0, -8px, 0);
-  }
-}
-
-@keyframes gentlePulse {
-  0%,
-  100% {
-    transform: scale(1);
-    filter: brightness(1);
-  }
-  50% {
-    transform: scale(1.006);
-    filter: brightness(1.05);
-  }
-}
-
-@keyframes portalZoom {
+@keyframes pulseGlow {
   0%,
   100% {
     transform: scale(1);
   }
   50% {
-    transform: scale(1.016);
+    transform: scale(1.01);
   }
 }
 
-@keyframes tempShift {
+@keyframes drift {
   0%,
   100% {
-    filter: saturate(1) brightness(1);
+    transform: translate3d(0, 0, 0);
   }
   50% {
-    filter: saturate(1.03) brightness(1.04);
+    transform: translate3d(0, -6px, 0);
   }
-}
-
-.grain-overlay {
-  position: absolute;
-  inset: -20%;
-  pointer-events: none;
-  opacity: 0.07;
-  mix-blend-mode: soft-light;
-  background-image:
-    repeating-radial-gradient(circle at 0 0, transparent 0, rgba(255, 255, 255, 0.9) 1px, transparent 2px),
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.1) 1px, transparent 2px, transparent 3px);
-  background-size: 180px 180px, 130px 130px;
-  animation: grainShift 20s linear infinite;
-}
-
-.vignette-overlay {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: radial-gradient(circle at center, transparent 42%, rgba(0, 0, 0, 0.34) 100%);
-}
-
-.portal-zoom {
-  animation: portalZoom 18s ease-in-out infinite;
-}
-
-.motion-drift {
-  animation: gentleDrift 12s ease-in-out infinite;
-}
-
-.motion-pulse {
-  animation: gentlePulse 7s ease-in-out infinite;
-}
-
-.motion-still {
-  animation: none;
-}
-
-.temperature-shift-slow {
-  animation: tempShift 18s ease-in-out infinite;
-}
-
-.tea-zone-frame {
-  transition: background 1000ms ease, box-shadow 700ms ease;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .grain-overlay,
-  .portal-zoom,
-  .motion-drift,
-  .motion-pulse,
-  .temperature-shift-slow {
-    animation: none !important;
-  }
-
   * {
-    scroll-behavior: auto !important;
+    animation: none !important;
+    transition: none !important;
   }
 }

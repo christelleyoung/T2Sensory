@@ -2,14 +2,18 @@
 
 import { RefObject, useEffect, useState } from "react";
 
+type UseInViewOnceOptions = IntersectionObserverInit;
+
 export default function useInViewOnce<T extends Element>(
   ref: RefObject<T | null>,
-  threshold = 0.35
+  options: UseInViewOnceOptions = { threshold: 0.35, rootMargin: "-10% 0px -10% 0px" }
 ) {
   const [inViewOnce, setInViewOnce] = useState(false);
 
   useEffect(() => {
-    if (inViewOnce || !ref.current) {
+    const target = ref.current;
+
+    if (!target || inViewOnce) {
       return;
     }
 
@@ -21,15 +25,13 @@ export default function useInViewOnce<T extends Element>(
           observer.disconnect();
         }
       },
-      {
-        threshold
-      }
+      options
     );
 
-    observer.observe(ref.current);
+    observer.observe(target);
 
     return () => observer.disconnect();
-  }, [inViewOnce, ref, threshold]);
+  }, [inViewOnce, options, ref]);
 
   return inViewOnce;
 }
