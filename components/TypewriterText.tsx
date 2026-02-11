@@ -5,13 +5,19 @@ import { useEffect, useRef, useState } from "react";
 type TypewriterTextProps = {
   lines: string[];
   start: boolean;
+  skipAnimations?: boolean;
   onDone?: () => void;
 };
 
 const randomBetween = (min: number, max: number) =>
   Math.floor(Math.random() * (max - min + 1)) + min;
 
-export default function TypewriterText({ lines, start, onDone }: TypewriterTextProps) {
+export default function TypewriterText({
+  lines,
+  start,
+  skipAnimations = false,
+  onDone
+}: TypewriterTextProps) {
   const [visibleLines, setVisibleLines] = useState<string[]>(Array(lines.length).fill(""));
   const [done, setDone] = useState(false);
   const doneCalledRef = useRef(false);
@@ -25,7 +31,8 @@ export default function TypewriterText({ lines, start, onDone }: TypewriterTextP
     }
 
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduceMotion =
+      skipAnimations || window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     const finish = () => {
       setDone(true);
@@ -57,13 +64,13 @@ export default function TypewriterText({ lines, start, onDone }: TypewriterTextP
         draft[lineIndex] += currentLine[charIndex];
         setVisibleLines([...draft]);
         charIndex += 1;
-        timeoutId = setTimeout(step, randomBetween(45, 65));
+        timeoutId = setTimeout(step, randomBetween(40, 70));
         return;
       }
 
       lineIndex += 1;
       charIndex = 0;
-      timeoutId = setTimeout(step, randomBetween(450, 700));
+      timeoutId = setTimeout(step, randomBetween(500, 700));
     };
 
     step();
@@ -73,21 +80,25 @@ export default function TypewriterText({ lines, start, onDone }: TypewriterTextP
         clearTimeout(timeoutId);
       }
     };
-  }, [lines, onDone, start]);
+  }, [lines, onDone, skipAnimations, start]);
 
   return (
     <div
-      className={`mx-auto mt-6 mb-10 w-full max-w-[52ch] px-6 text-center text-lg leading-relaxed tracking-wide text-white sm:text-xl md:text-2xl ${
+      className={`mx-auto w-full max-w-[52ch] px-6 text-center text-lg font-light leading-relaxed tracking-[0.02em] text-white sm:text-xl md:text-2xl ${
         done ? "opacity-85" : "opacity-100"
       }`}
     >
-      <div className="space-y-4">
+      <div className="space-y-6">
         {visibleLines.map((line, lineIndex) => (
-          <p key={`${lineIndex}-${lines[lineIndex]}`} className="min-h-[1.75em] font-light">
+          <p key={`${lineIndex}-${lines[lineIndex]}`} className="min-h-[1.75em]">
             {line.split("").map((char, charIndex) => (
               <span
                 key={`${lineIndex}-${charIndex}-${char}`}
-                className="inline-block animate-[letterFade_120ms_ease-out_forwards] opacity-0"
+                className={
+                  skipAnimations
+                    ? "opacity-100"
+                    : "inline-block animate-[letterFade_120ms_ease-out_forwards] opacity-0"
+                }
               >
                 {char === " " ? "\u00A0" : char}
               </span>
