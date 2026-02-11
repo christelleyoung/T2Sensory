@@ -1,7 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
+import TypewriterText from "../components/TypewriterText";
+import useInViewOnce from "../components/useInViewOnce";
 
 type TeaMood = {
   youtubeUrl: string;
@@ -169,82 +171,21 @@ const getYouTubeId = (url: string) => {
   }
 };
 
-function TypewriterPoem({ lines, onComplete }: { lines: string[]; onComplete: () => void }) {
-  const [visible, setVisible] = useState<string[]>(Array(lines.length).fill(""));
-  const [done, setDone] = useState(false);
-
-  useEffect(() => {
-    let timeoutId: ReturnType<typeof setTimeout> | null = null;
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    if (reduceMotion) {
-      setVisible(lines);
-      setDone(true);
-      onComplete();
-      return;
-    }
-
-    let lineIndex = 0;
-    let charIndex = 0;
-    const draft = Array(lines.length).fill("");
-
-    const step = () => {
-      if (lineIndex >= lines.length) {
-        timeoutId = setTimeout(() => {
-          setDone(true);
-          onComplete();
-        }, 1400);
-        return;
-      }
-
-      const line = lines[lineIndex];
-      if (charIndex < line.length) {
-        draft[lineIndex] += line[charIndex];
-        setVisible([...draft]);
-        charIndex += 1;
-        const variance = Math.floor(Math.random() * 31) - 15;
-        timeoutId = setTimeout(step, 55 + variance);
-        return;
-      }
-
-      lineIndex += 1;
-      charIndex = 0;
-      timeoutId = setTimeout(step, 500);
-    };
-
-    step();
-
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, [lines, onComplete]);
-
-  return (
-    <div className="mx-auto w-full max-w-3xl space-y-4 px-6 text-center text-2xl leading-relaxed text-white sm:text-3xl">
-      {visible.map((line, index) => (
-        <p key={`${line}-${index}`} className="min-h-10 font-light tracking-wide">
-          {line.split("").map((char, charIndex) => (
-            <span
-              key={`${char}-${charIndex}`}
-              className="inline-block animate-[letterFade_120ms_ease-out_forwards] opacity-0"
-            >
-              {char}
-            </span>
-          ))}
-        </p>
-      ))}
-      {done && <p className="sr-only">Poem complete</p>}
-    </div>
-  );
-}
-
-function DownArrow({ onClick, label }: { onClick: () => void; label: string }) {
+function DownArrow({
+  onClick,
+  label,
+  fixed = true
+}: {
+  onClick: () => void;
+  label: string;
+  fixed?: boolean;
+}) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-label={label}
-      className="absolute bottom-8 left-1/2 -translate-x-1/2 rounded-full border border-white/40 bg-black/25 px-4 py-2 text-3xl text-white/90 transition hover:bg-black/45"
+      className={`${fixed ? "absolute bottom-8 left-1/2 -translate-x-1/2" : ""} rounded-full border border-white/40 bg-black/25 px-4 py-2 text-3xl text-white/90 transition hover:bg-black/45`}
     >
       ↓
     </button>
@@ -265,6 +206,12 @@ export default function HomePage() {
   const [selectedTea, setSelectedTea] = useState<string>(teaOptions[0].slug);
   const handlePoemOneComplete = useCallback(() => setPoemOneDone(true), []);
   const handlePoemTwoComplete = useCallback(() => setPoemTwoDone(true), []);
+  const poemObserverOptions = useMemo<IntersectionObserverInit>(
+    () => ({ threshold: 0.35, rootMargin: "-10% 0px -10% 0px" }),
+    []
+  );
+  const poemOneInView = useInViewOnce(frameRefs.poemOne, poemObserverOptions);
+  const poemTwoInView = useInViewOnce(frameRefs.poemTwo, poemObserverOptions);
 
   const activeTea = teaMoodMap[selectedTea];
 
@@ -308,10 +255,14 @@ export default function HomePage() {
 
       <section
         ref={frameRefs.poemOne}
-        className="relative flex min-h-screen snap-start items-center justify-center bg-[linear-gradient(140deg,#0e0e17,#171424)]"
+        className="relative flex min-h-screen snap-start flex-col items-center justify-center bg-[linear-gradient(140deg,#0e0e17,#171424)] px-4"
       >
-        <TypewriterPoem lines={poemOne} onComplete={handlePoemOneComplete} />
-        {poemOneDone && <DownArrow onClick={() => scrollToFrame("videoOne")} label="Scroll to first video" />}
+        <TypewriterText lines={poemOne} start={poemOneInView} onDone={handlePoemOneComplete} />
+        {poemOneDone && (
+          <div className="mt-6">
+            <DownArrow onClick={() => scrollToFrame("videoOne")} label="Scroll to first video" fixed={false} />
+          </div>
+        )}
       </section>
 
       <section
@@ -333,10 +284,14 @@ export default function HomePage() {
 
       <section
         ref={frameRefs.poemTwo}
-        className="relative flex min-h-screen snap-start items-center justify-center bg-[linear-gradient(140deg,#130f1e,#26162b)]"
+        className="relative flex min-h-screen snap-start flex-col items-center justify-center bg-[linear-gradient(140deg,#130f1e,#26162b)] px-4"
       >
-        <TypewriterPoem lines={poemTwo} onComplete={handlePoemTwoComplete} />
-        {poemTwoDone && <DownArrow onClick={() => scrollToFrame("tea")} label="Scroll to tea pairing zone" />}
+        <TypewriterText lines={poemTwo} start={poemTwoInView} onDone={handlePoemTwoComplete} />
+        {poemTwoDone && (
+          <div className="mt-6">
+            <DownArrow onClick={() => scrollToFrame("tea")} label="Scroll to tea pairing zone" fixed={false} />
+          </div>
+        )}
       </section>
 
       <section
